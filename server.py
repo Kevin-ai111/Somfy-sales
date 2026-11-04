@@ -132,6 +132,7 @@ KNOWN_BRANDS = [
     'novoferm', 'sommer', 'marantec', 'velux', 'roto', 'meesenburg', 'nüßing', 'nuessing',
     'aldra', 'kneer', 'südfenster', 'blösch', 'bloesch', 'wicona', 'hueck', 'jansen', 'forster',
     'ryterna', 'gugelfuss', 'lämmermann', 'laemmermann', 'neher',
+    'acomax', 'bornemann', 'flexalum', 'folgner', 'finstral', 'gretsch-unitas', 'elsner',
 ]
 
 def brand_lines(text, max_chars=2500):
@@ -177,6 +178,8 @@ HIGH_VALUE_SLUGS = [
     'sonnenschutz', 'markise', 'jalousie', 'raffstore', 'beschattung', 'funk', 'solar',
     'insektenschutz', 'terrassendach', 'wintergarten', 'pergola', 'kunststofffenster',
 ]
+
+ANTRIEB_SLUGS = ['antrieb', 'motor', 'somfy', 'funk', 'steuerung', 'smart', 'elektr', 'solar', 'automat']
 
 def norm_path(path):
     """Pfad vergleichbar machen: Kleinschreibung, %-Kodierung aufloesen, Umlaute ausschreiben."""
@@ -434,9 +437,22 @@ def fetch_website_deep(url, apiflash_key=None):
                 try:
                     deep_html = fetch_url(deep_url, timeout=6)
                     deep_text = extract_text(deep_html)
-                    if deep_text and len(deep_text) > 100:
+                    if deep_text and len(deep_text) > 40:
                         results[deep_url] = deep_text
                         print("  Tiefe 2: {}".format(deep_url))
+                        # Tiefe 3 nur fuer Antriebs-/Steuerungsseiten (dort steht oft Somfy,
+                        # z.B. /fenster/rollladensysteme/motorische-antriebe/)
+                        for d3 in find_relevant_links(deep_html, deep_url):
+                            p3 = norm_path(urllib.parse.urlparse(d3).path)
+                            if d3 not in results and len(results) < 15 and any(k in p3 for k in ANTRIEB_SLUGS):
+                                try:
+                                    t3 = extract_text(fetch_url(d3, timeout=6))
+                                    if t3 and len(t3) > 40:
+                                        results[d3] = t3
+                                        print("  Tiefe 3: {}".format(d3))
+                                except Exception:
+                                    pass
+                                break
                 except Exception:
                     pass
 
@@ -515,11 +531,11 @@ def fetch_website_deep(url, apiflash_key=None):
     fund = []
     for page_url, text in results.items():
         slug = urllib.parse.urlparse(page_url).path.strip('/') or 'startseite'
-        for l in brand_lines(text, 1200):
+        for l in brand_lines(text, 2000):
             fund.append('[{}] {}'.format(slug, l))
     combined = []
     if fund:
-        combined.append("=== MARKEN-FUNDSTELLEN (alle Seiten, vollstaendig) ===\n" + '\n'.join(fund)[:3500])
+        combined.append("=== MARKEN-FUNDSTELLEN (alle Seiten, vollstaendig) ===\n" + '\n'.join(fund)[:7000])
     for page_url, text in results.items():
         slug = urllib.parse.urlparse(page_url).path.strip('/') or 'startseite'
         # Marken-/Partner-Seiten: doppeltes Limit, damit keine Lieferanten-Namen abgeschnitten werden
