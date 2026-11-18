@@ -133,7 +133,20 @@ KNOWN_BRANDS = [
     'aldra', 'kneer', 'südfenster', 'blösch', 'bloesch', 'wicona', 'hueck', 'jansen', 'forster',
     'ryterna', 'gugelfuss', 'lämmermann', 'laemmermann', 'neher',
     'acomax', 'bornemann', 'flexalum', 'folgner', 'finstral', 'gretsch-unitas', 'elsner',
+    # Selbstlernend: alle Marken aus den manuell geprueften Testlisten 1-3 (Stand 18.11.)
+    'akotherm', 'alumil', 'anku', 'anwis', 'be bauelemente', 'condoor', 'dormakaba', 'drutex',
+    'ehret', 'erfal', 'eurosun', 'faltenbacher', 'gaulhofer', 'german windows', 'geze',
+    'glas trösch', 'gretsch unitas', 'groke', 'growe', 'gutmann', 'hilzinger', 'huga', 'inotherm',
+    'jeld-wen', 'jeldwen', 'käuferle', 'kompotherm', 'laengle', 'loxone', 'maco', 'novoferm',
+    'obuk', 'profine', 'rekord', 'reynaers', 'rodenberg', 'roka', 'schüt-duis', 'schuet-duis',
+    'schweiker', 'siegenia', 'solis', 'sunparadise', 'sühac', 'teba', 'tormax', 'trendtüren',
+    'trocal', 'unilux', 'velfac', 'weru', 'winkhaus', 'wink haus', 'nova hüppe', 'tacke+lindemann',
 ]
+
+# Woerter, die auf eine Marken-/Partnerangabe hinweisen, auch wenn die Marke unbekannt ist
+BRAND_HINT_WORDS = ['partner', 'hersteller', 'lieferant', 'fachbetrieb', 'fachhändler', 'fachhaendler',
+                    'vertragshändler', 'vertragshaendler', 'premium-partner', 'zertifiziert', 'autorisiert',
+                    'qualitätsprodukte von', 'produkte von', 'marken', 'markenhersteller', '®']
 
 def brand_lines(text, max_chars=2500):
     """Alle Zeilen, in denen eine bekannte Marke oder 'Partner/Hersteller' vorkommt.
@@ -152,7 +165,7 @@ def brand_lines(text, max_chars=2500):
                 break
             continue
         if any(re.search(r'(?<![a-zäöü])' + re.escape(b) + r'(?![a-zäöü])', low) for b in KNOWN_BRANDS) \
-           or (('partner' in low and 'ansprechpartner' not in low) or 'hersteller' in low or 'lieferant' in low) and len(l) > 20:
+           or (any(w in low for w in BRAND_HINT_WORDS) and 'ansprechpartner' not in low and len(l) > 20):
             out.append(l)
             total += len(l)
             if total > max_chars:
@@ -177,6 +190,8 @@ HIGH_VALUE_SLUGS = [
     'leistung', 'fenster', 'tuer', 'tore', 'rollladen', 'rolladen', 'rolllaeden', 'rollaeden',
     'sonnenschutz', 'markise', 'jalousie', 'raffstore', 'beschattung', 'funk', 'solar',
     'insektenschutz', 'terrassendach', 'wintergarten', 'pergola', 'kunststofffenster',
+    # Liste 3: Marken standen auf "Unternehmen"- und "Privat"-Seiten
+    'unternehmen', 'privat', 'privatkunden', 'geschaeftskunden', 'gewerbe', 'qualitaet', 'marken',
 ]
 
 ANTRIEB_SLUGS = ['antrieb', 'motor', 'somfy', 'funk', 'steuerung', 'smart', 'elektr', 'solar', 'automat']
